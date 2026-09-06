@@ -1,0 +1,97 @@
+{
+  "manifest_version": 3,
+  "name": "AI Bot - ผู้ช่วยปกป้องวิดีโอ",
+  "short_name": "AI Video Bot",
+  "version": "1.0.0",
+  "description": "AI Bot สำหรับสั่งงานปกป้องวิดีโอบนโซเชียลมีเดียด้วยภาษาไทยแบบเรียลไทม์ (เบลอใบหน้า, เบลอทะเบียน, ตัดตอน)",
+  "default_locale": "th",
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "permissions": [
+    "storage",
+    "activeTab",
+    "scripting"
+  ],
+  "optional_permissions": [
+    "downloads"
+  ],
+  "host_permissions": [
+    "*://*.facebook.com/*",
+    "*://*.tiktok.com/*",
+    "*://*.instagram.com/*"
+  ],
+  "background": {
+    "service_worker": "src/background/service-worker.js",
+    "type": "module"
+  },
+  "action": {
+    "default_popup": "src/popup/popup.html",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "*://*.facebook.com/*"
+      ],
+      "js": [
+        "src/utils/logger.js",
+        "src/core/commandParser.js",
+        "src/core/frameExtractor.js",
+        "src/core/videoProcessor.js",
+        "src/core/aiVision.js",
+        "src/core/permissions.js",
+        "src/content-scripts/common/video-detector.js",
+        "src/content-scripts/facebook.js"
+      ],
+      "css": [
+        "src/content-scripts/common/overlay.css"
+      ],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": [
+        "*://*.tiktok.com/*"
+      ],
+      "js": [
+        "src/utils/logger.js",
+        "src/core/commandParser.js",
+        "src/core/frameExtractor.js",
+        "src/core/videoProcessor.js",
+        "src/core/aiVision.js",
+        "src/core/permissions.js",
+        "src/content-scripts/common/video-detector.js",
+        "src/content-scripts/tiktok.js"
+      ],
+      "css": [
+        "src/content-scripts/common/overlay.css"
+      ],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": [
+        "*://*.instagram.com/*"
+      ],
+      "js": [
+        "src/utils/logger.js",
+        "src/core/commandParser.js",
+        "src/core/frameExtractor.js",
+        "src/core/videoProcessor.js",
+        "src/core/aiVision.js",
+        "src/core/permissions.js",
+        "src/content-scripts/common/video-detector.js",
+        "src/content-scripts/instagram.js"
+      ],
+      "css": [
+        "src/content-scripts/common/overlay.css"
+      ],
+      "run_at": "document_idle"
+    }
+  ]
+}

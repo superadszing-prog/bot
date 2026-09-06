@@ -1,0 +1,82 @@
+/**
+ * Extracts frames from an HTMLVideoElement so they can be sent to the AI
+ * vision pipeline for face / object detection. Runs only in the browser
+ * (relies on <canvas> + <video>).
+ */
+(function (root, factory) {
+  const mod = factory();
+  if (typeof module !== 'undefined' && module.exports) {
+    module.exports = mod;
+  }
+  root.AIBotFrameExtractor = mod;
+})(typeof self !== 'undefined' ? self : this, function () {
+  /**
+   * Capture a single frame from a video element as a base64 JPEG data URL.
+   * @param {HTMLVideoElement} videoEl
+   * @param {{maxWidth?: number, quality?: number}} [options]
+   * @returns {string|null} data URL, or null if capture isn't possible.
+   */
+  function captureFrame(videoEl, options) {
+    options = options || {};
+    if (typeof document === 'undefined' || !videoEl || !videoEl.videoWidth) {
+      return null;
+    }
+
+    const maxWidth = options.maxWidth || 640;
+    const scale = Math.min(1, maxWidth / videoEl.videoWidth);
+    const width = Math.max(1, Math.round(videoEl.videoWidth * scale));
+    const height = Math.max(1, Math.round(videoEl.videoHeight * scale));
+
+    const canvas = document.createElement('canvas');
+    canvas.width = width;
+    canvas.height = height;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(videoEl, 0, 0, width, height);
+
+    return canvas.toDataURL('image/jpeg', options.quality || 0.8);
+  }
+
+  /**
+   * Sample frames from a video at a fixed interval (in seconds) between an
+   * optional start/end range. Returns a promise resolving to an array of
+   * { timestamp, dataUrl } objects.
+   */
+  async function extractFrames(videoEl, { start = 0, end = null, intervalSeconds = 1, maxWidth = 640 } = {}) {
+    if (typeof document === 'undefined' || !videoEl) {
+      return [];
+    }
+
+    const duration = end !== null ? end : videoEl.duration || 0;
+    const frames = [];
+    const wasPaused = videoEl.paused;
+    const originalTime = videoEl.currentTime;
+
+    for (let t = start; t <= duration; t += intervalSeconds) {
+      await seekTo(videoEl, t);
+      const dataUrl = captureFrame(videoEl, { maxWidth });
+      if (dataUrl) {
+        frames.push({ timestamp: t, dataUrl });
+      }
+    }
+
+    videoEl.currentTime = originalTime;
+    if (!wasPaused) {
+      videoEl.play().catch(() => {});
+    }
+
+    return frames;
+  }
+
+  function seekTo(videoEl, time) {
+    return new Promise((resolve) => {
+      const onSeeked = () => {
+        videoEl.removeEventListener('seeked', onSeeked);
+        resolve();
+      };
+      videoEl.addEventListener('seeked', onSeeked);
+      videoEl.currentTime = time;
+    });
+  }
+
+  return { captureFrame, extractFrames };
+});

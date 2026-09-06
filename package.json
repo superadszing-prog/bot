@@ -1,0 +1,21 @@
+{
+  "name": "ai-bot-browser-extension",
+  "version": "1.0.0",
+  "description": "AI Bot Browser Extension - Real-time video processing with Thai language commands for social media content protection (Facebook, TikTok, Instagram)",
+  "private": true,
+  "license": "MIT",
+  "scripts": {
+    "test": "jest",
+    "test:watch": "jest --watch"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0"
+  },
+  "keywords": [
+    "browser-extension",
+    "chrome-extension",
+    "ai",
+    "video-processing",
+    "thai-language"
+  ]
+}
