@@ -24,8 +24,7 @@
     "*://*.instagram.com/*"
   ],
   "background": {
-    "service_worker": "src/background/service-worker.js",
-    "type": "module"
+    "service_worker": "src/background/service-worker.js"
   },
   "action": {
     "default_popup": "src/popup/popup.html",

@@ -88,6 +88,9 @@
       const parsed = typeof content === 'string' ? JSON.parse(content) : content;
       return Array.isArray(parsed.regions) ? parsed.regions : [];
     } catch (error) {
+      if (typeof console !== 'undefined' && console.warn) {
+        console.warn('[AI-Bot][aiVision] Failed to parse regions from API response', error.message);
+      }
       return [];
     }
   }
