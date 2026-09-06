@@ -149,11 +149,22 @@
       const w = Math.max(1, Math.floor(width / blockSize));
       const h = Math.max(1, Math.floor(height / blockSize));
 
+      if (!this._offscreenCanvas) {
+        this._offscreenCanvas = document.createElement('canvas');
+      }
+      const offscreen = this._offscreenCanvas;
+      offscreen.width = w;
+      offscreen.height = h;
+      const offscreenCtx = offscreen.getContext('2d');
+      offscreenCtx.imageSmoothingEnabled = false;
+      offscreenCtx.clearRect(0, 0, w, h);
+      // Draw the region small onto the offscreen canvas...
+      offscreenCtx.drawImage(this.videoEl, x, y, width, height, 0, 0, w, h);
+
       ctx.save();
       ctx.imageSmoothingEnabled = false;
-      // Draw small then scale up to create a pixelated look.
-      ctx.drawImage(this.videoEl, x, y, width, height, x, y, w, h);
-      ctx.drawImage(this.canvas, x, y, w, h, x, y, width, height);
+      // ...then scale it back up onto the main canvas for a pixelated look.
+      ctx.drawImage(offscreen, 0, 0, w, h, x, y, width, height);
       ctx.restore();
     }
   }

@@ -112,3 +112,9 @@ button:hover {
 .permission-row input {
   width: auto;
 }
+
+.hint {
+  font-size: 11px;
+  color: #888;
+  margin: 4px 0 0;
+}
