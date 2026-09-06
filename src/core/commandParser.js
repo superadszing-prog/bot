@@ -106,13 +106,11 @@
 
     const range = extractRange(normalized);
     const actions = [];
-    const matchedRanges = [];
 
     for (const rule of RULES) {
       for (const keyword of rule.keywords) {
         const index = normalized.indexOf(keyword.toLowerCase());
         if (index !== -1) {
-          matchedRanges.push([index, index + keyword.length]);
           actions.push({
             type: rule.type,
             target: rule.target,

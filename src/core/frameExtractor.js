@@ -45,13 +45,14 @@
     if (typeof document === 'undefined' || !videoEl) {
       return [];
     }
+    const safeInterval = intervalSeconds > 0 ? intervalSeconds : 1;
 
     const duration = end !== null ? end : videoEl.duration || 0;
     const frames = [];
     const wasPaused = videoEl.paused;
     const originalTime = videoEl.currentTime;
 
-    for (let t = start; t <= duration; t += intervalSeconds) {
+    for (let t = start; t <= duration; t += safeInterval) {
       await seekTo(videoEl, t);
       const dataUrl = captureFrame(videoEl, { maxWidth });
       if (dataUrl) {

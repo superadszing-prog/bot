@@ -130,4 +130,28 @@ describe('frameExtractor.extractFrames', () => {
     expect(video.currentTime).toBe(0.5); // restored to original time
     expect(video.play).toHaveBeenCalled(); // was playing before, so resumed
   });
+
+  test('falls back to a safe interval instead of looping forever when intervalSeconds is 0', async () => {
+    const video = createMockVideo({ duration: 2, paused: true });
+    let seekedHandler;
+    video.addEventListener = jest.fn((event, handler) => {
+      if (event === 'seeked') seekedHandler = handler;
+    });
+    video.removeEventListener = jest.fn();
+    Object.defineProperty(video, 'currentTime', {
+      get() {
+        return this._currentTime;
+      },
+      set(value) {
+        this._currentTime = value;
+        if (seekedHandler) seekedHandler();
+      },
+      configurable: true
+    });
+    video._currentTime = 0;
+
+    const frames = await extractFrames(video, { start: 0, end: 2, intervalSeconds: 0, maxWidth: 640 });
+
+    expect(frames).toHaveLength(3); // falls back to interval of 1 second: t = 0, 1, 2
+  });
 });

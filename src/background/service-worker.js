@@ -18,6 +18,16 @@ chrome.runtime.onInstalled.addListener(() => {
  */
 const tabStatus = new Map();
 
+chrome.tabs.onRemoved.addListener((tabId) => {
+  tabStatus.delete(tabId);
+});
+
+chrome.tabs.onUpdated.addListener((tabId, changeInfo) => {
+  if (changeInfo.status === 'loading') {
+    tabStatus.delete(tabId);
+  }
+});
+
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (!message || !message.type) {
     return false;
