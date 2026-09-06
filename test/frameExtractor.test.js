@@ -102,6 +102,21 @@ describe('frameExtractor.extractFrames', () => {
     expect(frames).toEqual([]);
   });
 
+  test('does not hang when the browser never fires a "seeked" event', async () => {
+    jest.useFakeTimers();
+    const video = createMockVideo({ duration: 0, paused: true });
+    // Never invoke the 'seeked' handler, simulating a no-op seek.
+    video.addEventListener = jest.fn();
+    video.removeEventListener = jest.fn();
+
+    const promise = extractFrames(video, { start: 0, end: 0, intervalSeconds: 1, maxWidth: 640 });
+    await jest.advanceTimersByTimeAsync(1000);
+    const frames = await promise;
+
+    expect(frames).toHaveLength(1);
+    jest.useRealTimers();
+  });
+
   test('samples one frame per interval across the duration and restores playback state', async () => {
     const video = createMockVideo({ duration: 2, paused: false, currentTime: 0.5 });
     // Simulate the browser firing "seeked" as soon as currentTime is set.

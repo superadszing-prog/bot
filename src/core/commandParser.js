@@ -109,8 +109,7 @@
 
     for (const rule of RULES) {
       for (const keyword of rule.keywords) {
-        const index = normalized.indexOf(keyword.toLowerCase());
-        if (index !== -1) {
+        if (keywordMatches(normalized, keyword)) {
           actions.push({
             type: rule.type,
             target: rule.target,
@@ -123,6 +122,28 @@
     }
 
     return actions;
+  }
+
+  const ASCII_KEYWORD_REGEX = /^[a-z0-9\s]+$/i;
+
+  function escapeRegExp(value) {
+    return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  }
+
+  /**
+   * Match a keyword against the normalized command text. Pure-ASCII
+   * keywords (e.g. "trim", "to") are matched with word boundaries to avoid
+   * false positives inside unrelated words; Thai-script keywords (which
+   * don't have a meaningful \b word-boundary concept) fall back to a
+   * simple substring match.
+   */
+  function keywordMatches(normalizedText, keyword) {
+    const lowerKeyword = keyword.toLowerCase();
+    if (ASCII_KEYWORD_REGEX.test(lowerKeyword)) {
+      const pattern = new RegExp(`\\b${escapeRegExp(lowerKeyword)}\\b`);
+      return pattern.test(normalizedText);
+    }
+    return normalizedText.indexOf(lowerKeyword) !== -1;
   }
 
   /**

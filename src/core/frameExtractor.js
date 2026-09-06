@@ -68,12 +68,20 @@
     return frames;
   }
 
-  function seekTo(videoEl, time) {
+  function seekTo(videoEl, time, timeoutMs = 1000) {
     return new Promise((resolve) => {
-      const onSeeked = () => {
+      let settled = false;
+      const finish = () => {
+        if (settled) return;
+        settled = true;
         videoEl.removeEventListener('seeked', onSeeked);
+        clearTimeout(timer);
         resolve();
       };
+      const onSeeked = () => finish();
+      // Fallback in case the browser doesn't fire 'seeked' (e.g. seeking to
+      // the current time is a no-op), so extractFrames never hangs.
+      const timer = setTimeout(finish, timeoutMs);
       videoEl.addEventListener('seeked', onSeeked);
       videoEl.currentTime = time;
     });

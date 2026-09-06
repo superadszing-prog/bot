@@ -46,6 +46,13 @@ describe('commandParser', () => {
     expect(isRecognized('สวัสดีครับ')).toBe(false);
   });
 
+  test('does not false-positive-match English keywords inside unrelated words', () => {
+    expect(parseCommand('trimester')).toEqual([]);
+    expect(parseCommand('this is a trim')).toEqual([
+      { type: 'trim', target: null, method: 'trim', range: null }
+    ]);
+  });
+
   test('timeToSeconds supports mm:ss and hh:mm:ss', () => {
     expect(timeToSeconds('00:05')).toBe(5);
     expect(timeToSeconds('01:05')).toBe(65);
