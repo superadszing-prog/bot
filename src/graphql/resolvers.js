@@ -12,6 +12,7 @@ const Webhook = require('../models/Webhook');
 const Video = require('../models/Video');
 const ActivityLog = require('../models/ActivityLog');
 const crypto = require('crypto');
+const { GraphQLError } = require('graphql');
 const { ApiError, ERROR_CODES } = require('../constants/errors');
 
 const pubsub = new PubSub();
@@ -28,18 +29,44 @@ function bridgeBusToPubSub() {
   bus.on(EVENTS.PROCESSING_PROGRESS, publish);
 }
 
+/** Wrap an ApiError (or any error) as a GraphQLError carrying the app code. */
+function toGraphQLError(err) {
+  if (err instanceof GraphQLError) return err;
+  const code = (err && err.code) || ERROR_CODES.INTERNAL_ERROR;
+  return new GraphQLError(err.message || 'Internal server error', {
+    extensions: { code, details: err && err.details },
+  });
+}
+
 function requireUser(context) {
   if (!context.user) {
-    throw new ApiError(ERROR_CODES.UNAUTHORIZED, 'Authentication required');
+    throw new GraphQLError('Authentication required', {
+      extensions: { code: ERROR_CODES.UNAUTHORIZED },
+    });
   }
   return context.user;
+}
+
+/** Wrap a resolver fn so thrown ApiErrors surface their app error code. */
+function guard(fn) {
+  return async (parent, args, context, info) => {
+    try {
+      return await fn(parent, args, context, info);
+    } catch (err) {
+      throw toGraphQLError(err);
+    }
+  };
+}
+
+function guardAll(obj) {
+  return Object.fromEntries(Object.entries(obj).map(([k, v]) => [k, guard(v)]));
 }
 
 const resolvers = {
   JSON: GraphQLJSON,
   DateTime: GraphQLDateTime,
 
-  Query: {
+  Query: guardAll({
     getCommandStatus: async (_parent, { jobId }, context) => {
       const user = requireUser(context);
       return jobService.getJobForUser(jobId, user._id);
@@ -69,9 +96,9 @@ const resolvers = {
       requireUser(context);
       return getQueue().getStats();
     },
-  },
+  }),
 
-  Mutation: {
+  Mutation: guardAll({
     executeCommand: async (_parent, { command, videoId = null, priority = 3 }, context) => {
       const user = requireUser(context);
       const job = await jobService.createJob({ userId: user._id, command, videoId, priority });
@@ -139,12 +166,12 @@ const resolvers = {
       }
       return true;
     },
-  },
+  }),
 
   Subscription: {
     commandProgress: {
       subscribe: withFilter(
-        () => pubsub.asyncIterableIterator([SUB_TOPICS.JOB_UPDATED]),
+        () => pubsub.asyncIterator([SUB_TOPICS.JOB_UPDATED]),
         (payload, variables, context) => {
           if (!context.user) return false;
           return payload.job.jobId === variables.jobId;
@@ -154,7 +181,7 @@ const resolvers = {
     },
     processingStatus: {
       subscribe: withFilter(
-        () => pubsub.asyncIterableIterator([SUB_TOPICS.JOB_UPDATED]),
+        () => pubsub.asyncIterator([SUB_TOPICS.JOB_UPDATED]),
         async (payload, _variables, context) => {
           if (!context.user) return false;
           const job = await jobService.getJobForUser(payload.job.jobId, context.user._id).catch(() => null);

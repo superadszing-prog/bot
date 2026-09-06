@@ -1,13 +1,13 @@
 const http = require('http');
-const config = require('../config');
-const logger = require('../config/logger');
-const { connectDatabase } = require('../db/connection');
-const { createApp } = require('../app');
-const { createGraphQL } = require('../graphql');
-const { initSocket, closeSocket } = require('../websocket/socket');
-const { initQueue, closeQueue } = require('../queue');
-const jobService = require('../services/jobService');
-const { startWebhookDispatcher } = require('../services/webhookService');
+const config = require('./config');
+const logger = require('./config/logger');
+const { connectDatabase } = require('./db/connection');
+const { createApp } = require('./app');
+const { createGraphQL } = require('./graphql');
+const { initSocket, closeSocket } = require('./websocket/socket');
+const { initQueue, closeQueue } = require('./queue');
+const jobService = require('./services/jobService');
+const { startWebhookDispatcher } = require('./services/webhookService');
 
 /**
  * Boot the full server: MongoDB → queue → HTTP+Express → GraphQL → Socket.io.

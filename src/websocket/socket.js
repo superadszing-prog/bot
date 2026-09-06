@@ -64,12 +64,13 @@ function initSocket(httpServer) {
     });
   });
 
-  // Bridge internal bus events to sockets.
+  // Bridge internal bus events to sockets. Emit to the job room and the
+  // owner's user room as a union so clients in both rooms receive one copy.
   const emitJob = (event) => ({ job }) => {
     if (!job || !job.jobId) return;
-    io.to(roomForJob(job.jobId)).emit(event, { job });
-    // Also notify the owner's room so clients that didn't subscribe still get updates.
-    if (job.userId) io.to(roomForUser(String(job.userId))).emit(event, { job });
+    let target = io.to(roomForJob(job.jobId));
+    if (job.userId) target = target.to(roomForUser(String(job.userId)));
+    target.emit(event, { job });
   };
 
   bus.on(EVENTS.JOB_STARTED, emitJob(EVENTS.JOB_STARTED));
