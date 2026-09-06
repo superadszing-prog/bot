@@ -4,7 +4,7 @@ const cors = require('cors');
 const compression = require('compression');
 const config = require('./config');
 const logger = require('./config/logger');
-const { globalLimiter } = require('./middleware/rateLimiter');
+const { globalLimiter, authLimiter } = require('./middleware/rateLimiter');
 const { authenticate } = require('./middleware/auth');
 const { errorHandler, notFoundHandler } = require('./middleware/errorHandler');
 
@@ -26,13 +26,18 @@ function createApp({ graphqlMiddleware } = {}) {
   app.disable('x-powered-by');
   app.set('trust proxy', 1);
 
-  // Security headers — CSP disabled because Apollo Sandbox serves inline assets.
-  app.use(helmet({ contentSecurityPolicy: false, crossOriginEmbedderPolicy: false }));
-  app.use(compression());
+  // Security headers. CSP stays enabled for API responses; the GraphQL route
+  // below relaxes it only for /graphql so the Apollo Sandbox can render.
+  app.use(helmet());
+
+  // CORS: use the configured allow-list. '*' is only honoured outside
+  // production; in production an explicit list is required.
+  const allowAll = config.cors.origins.includes('*') && !config.isProd;
   app.use(cors({
-    origin: config.cors.origins.includes('*') ? '*' : config.cors.origins,
+    origin: allowAll ? true : config.cors.origins.filter((o) => o !== '*'),
     credentials: true,
   }));
+  app.use(compression());
   app.use(express.json({ limit: '1mb' }));
   app.use(express.urlencoded({ extended: true, limit: '1mb' }));
 
@@ -52,10 +57,20 @@ function createApp({ graphqlMiddleware } = {}) {
 
   app.use('/api', globalLimiter);
 
-  // GraphQL (HTTP). authenticate is tolerant — it attaches req.user when
-  // credentials are present but lets the resolvers enforce authorization.
+  // Stricter limiter on credential endpoints to blunt brute-force attempts.
+  app.use('/api/auth', authLimiter);
+
+  // GraphQL (HTTP). Apollo Sandbox needs inline styles/scripts, so CSP is
+  // relaxed only on this path. authenticate is tolerant — it attaches req.user
+  // when credentials are present but lets the resolvers enforce authorization.
   if (graphqlMiddleware) {
-    app.use('/graphql', optionalAuth, graphqlMiddleware);
+    app.use(
+      '/graphql',
+      helmet({ contentSecurityPolicy: false, crossOriginEmbedderPolicy: false }),
+      globalLimiter,
+      optionalAuth,
+      graphqlMiddleware
+    );
   }
 
   app.use('/api/auth', authRoutes);

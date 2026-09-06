@@ -45,7 +45,7 @@ router.post(
       }
 
       const videoId = `vid_${crypto.randomUUID()}`;
-      const ext = path.extname(req.file.originalname).toLowerCase() || '.mp4';
+      const ext = storageService.safeExtension(req.file.originalname);
       const storedName = `${videoId}${ext}`;
 
       const metadata = await storageService.extractMetadata(req.file);
@@ -53,7 +53,7 @@ router.post(
 
       // With the local driver multer picked a random name; rename for stable paths.
       if (storage.storageDriver === 'local') {
-        const target = path.join(uploadDir, storedName);
+        const target = storageService.safeJoin(uploadDir, storedName);
         await fs.promises.rename(req.file.path, target);
         storage.storageUrl = target;
       }

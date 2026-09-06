@@ -7,6 +7,7 @@ const { getQueue } = require('../queue');
 const config = require('../config');
 const logger = require('../config/logger');
 const { ApiError, ERROR_CODES } = require('../constants/errors');
+const { asString, oneOf } = require('../utils/sanitize');
 
 const SIMULATED_STEPS = [10, 25, 45, 65, 80, 92, 100];
 
@@ -35,7 +36,8 @@ async function createJob({ userId, command, videoId = null, priority = 3 }) {
   const parsed = parseCommand(command); // throws ApiError on unsupported command
 
   if (videoId) {
-    const video = await Video.findOne({ videoId });
+    const safeVideoId = asString(videoId);
+    const video = safeVideoId ? await Video.findOne({ videoId: safeVideoId }) : null;
     if (!video) throw new ApiError(ERROR_CODES.VIDEO_NOT_FOUND, `Video not found: ${videoId}`);
   }
 
@@ -135,14 +137,15 @@ async function runRealProcessing(job) {
 }
 
 async function getJobForUser(jobId, userId) {
-  const job = await ProcessingJob.findOne({ jobId, userId });
+  const job = await ProcessingJob.findOne({ jobId: asString(jobId), userId });
   if (!job) throw new ApiError(ERROR_CODES.JOB_NOT_FOUND, `Job not found: ${jobId}`);
   return job;
 }
 
 async function listJobsForUser(userId, { page = 1, limit = 20, status } = {}) {
   const filter = { userId };
-  if (status) filter.status = status;
+  const safeStatus = oneOf(status, ProcessingJob.STATUSES);
+  if (safeStatus) filter.status = safeStatus;
   const skip = (page - 1) * limit;
   const [items, total] = await Promise.all([
     ProcessingJob.find(filter).sort({ createdAt: -1 }).skip(skip).limit(limit),

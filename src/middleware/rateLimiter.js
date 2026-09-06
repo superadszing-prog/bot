@@ -22,4 +22,19 @@ const globalLimiter = buildLimiter(config.rateLimit.max, 'Too many requests, ple
 /** Stricter limiter for expensive operations (command execution, uploads). */
 const commandLimiter = buildLimiter(config.rateLimit.commandsMax, 'Too many processing requests, please slow down');
 
-module.exports = { globalLimiter, commandLimiter };
+/** Limiter for credential endpoints (login/register) to blunt brute force. */
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 30,
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator: (req) => req.ip,
+  handler: (req, res) => {
+    res.status(429).json({
+      success: false,
+      error: { code: ERROR_CODES.RATE_LIMITED, message: 'Too many authentication attempts, please try again later' },
+    });
+  },
+});
+
+module.exports = { globalLimiter, commandLimiter, authLimiter };

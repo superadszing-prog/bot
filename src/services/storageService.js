@@ -13,6 +13,28 @@ function isAllowedVideo(file) {
   return ALLOWED_EXTENSIONS.includes(ext) && ALLOWED_MIME_TYPES.includes(file.mimetype);
 }
 
+/**
+ * Return a safe file extension for an uploaded video, restricted to the
+ * whitelist. Never trusts arbitrary path characters from the client.
+ */
+function safeExtension(originalname) {
+  const ext = path.extname(originalname || '').toLowerCase();
+  return ALLOWED_EXTENSIONS.includes(ext) ? ext : '.mp4';
+}
+
+/**
+ * Build a storage path guaranteed to stay inside the given base directory.
+ * Throws if the resolved path would escape the base (defense in depth).
+ */
+function safeJoin(base, name) {
+  const resolvedBase = path.resolve(base);
+  const target = path.resolve(resolvedBase, path.basename(name));
+  if (!target.startsWith(resolvedBase + path.sep)) {
+    throw new Error('Resolved path escapes the storage directory');
+  }
+  return target;
+}
+
 let s3Client = null;
 async function getS3Client() {
   if (s3Client) return s3Client;
@@ -51,7 +73,7 @@ async function storeFile(file, storedName) {
   // Local storage: multer has already written the file into UPLOAD_DIR.
   return {
     storageDriver: 'local',
-    storageUrl: path.resolve(file.path),
+    storageUrl: safeJoin(config.storage.uploadDir, path.basename(file.path)),
     storageKey: path.basename(file.path),
   };
 }
@@ -63,7 +85,7 @@ async function deleteFile(storageDriver, storageKey) {
       const { DeleteObjectCommand } = require('@aws-sdk/client-s3');
       await client.send(new DeleteObjectCommand({ Bucket: config.storage.s3.bucket, Key: storageKey }));
     } else if (storageKey) {
-      await fsp.unlink(path.join(path.resolve(config.storage.uploadDir), path.basename(storageKey)));
+      await fsp.unlink(safeJoin(config.storage.uploadDir, path.basename(storageKey)));
     }
   } catch (err) {
     logger.warn('Failed to delete stored file', { storageKey, error: err.message });
@@ -115,4 +137,4 @@ async function extractMetadata(file) {
   };
 }
 
-module.exports = { storeFile, deleteFile, extractMetadata, isAllowedVideo, ALLOWED_EXTENSIONS };
+module.exports = { storeFile, deleteFile, extractMetadata, isAllowedVideo, safeExtension, safeJoin, ALLOWED_EXTENSIONS };
