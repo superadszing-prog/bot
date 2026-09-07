@@ -24,15 +24,39 @@
   const saveKeyButton = document.getElementById('save-key-btn');
 
   let processor = null;
+  let currentObjectUrl = null;
 
   function setStatus(state, message) {
     statusIndicator.className = `status status--${state}`;
     statusText.textContent = message;
   }
 
+  // NOTE: this is a light obfuscation layer, not real encryption - it only
+  // avoids storing the API key as a directly readable plain string in
+  // localStorage (e.g. in browser dev tools "Application" tab at a
+  // glance). Anyone with script execution in this origin can still
+  // recover the key; there is no fully secure way to store secrets
+  // client-side without a backend.
+  function obfuscate(value) {
+    try {
+      return btoa(unescape(encodeURIComponent(value)));
+    } catch (error) {
+      return '';
+    }
+  }
+
+  function deobfuscate(value) {
+    try {
+      return decodeURIComponent(escape(atob(value)));
+    } catch (error) {
+      return '';
+    }
+  }
+
   function loadApiKey() {
     try {
-      apiKeyInput.value = window.localStorage.getItem(STORAGE_KEY) || '';
+      const stored = window.localStorage.getItem(STORAGE_KEY);
+      apiKeyInput.value = stored ? deobfuscate(stored) : '';
     } catch (error) {
       logger.warn('Unable to read API key from localStorage', error.message);
     }
@@ -40,11 +64,20 @@
 
   function saveApiKey() {
     try {
-      window.localStorage.setItem(STORAGE_KEY, apiKeyInput.value.trim());
+      window.localStorage.setItem(STORAGE_KEY, obfuscate(apiKeyInput.value.trim()));
       setStatus('done', 'บันทึกคีย์เรียบร้อย');
     } catch (error) {
       logger.error('Unable to save API key to localStorage', error.message);
       setStatus('error', 'ไม่สามารถบันทึกคีย์ได้');
+    }
+  }
+
+  function getStoredApiKey() {
+    try {
+      const stored = window.localStorage.getItem(STORAGE_KEY);
+      return stored ? deobfuscate(stored).trim() : '';
+    } catch (error) {
+      return '';
     }
   }
 
@@ -53,14 +86,21 @@
     if (!file) {
       return;
     }
+    if (!file.type || !file.type.startsWith('video/')) {
+      setStatus('error', 'กรุณาเลือกไฟล์วิดีโอเท่านั้น');
+      return;
+    }
 
     if (processor) {
       processor.stop();
       processor = null;
     }
+    if (currentObjectUrl) {
+      URL.revokeObjectURL(currentObjectUrl);
+    }
 
-    const objectUrl = URL.createObjectURL(file);
-    videoEl.src = objectUrl;
+    currentObjectUrl = URL.createObjectURL(file);
+    videoEl.src = currentObjectUrl;
 
     videoEl.onloadedmetadata = () => {
       processor = new VideoProcessor(videoEl, logger);
@@ -94,7 +134,7 @@
       const trimActions = actions.filter((a) => a.type === 'trim');
 
       if (protectActions.length > 0) {
-        const apiKey = (window.localStorage.getItem(STORAGE_KEY) || '').trim();
+        const apiKey = getStoredApiKey();
         if (!apiKey) {
           logger.warn('No API key configured; skipping AI region detection');
           setStatus('error', 'กรุณาใส่ OpenAI API Key เพื่อใช้คำสั่งปกป้อง/เบลอ');
