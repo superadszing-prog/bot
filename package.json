@@ -6,7 +6,8 @@
   "license": "MIT",
   "scripts": {
     "test": "jest",
-    "test:watch": "jest --watch"
+    "test:watch": "jest --watch",
+    "build:netlify": "node scripts/build-netlify.js"
   },
   "devDependencies": {
     "jest": "^29.7.0"

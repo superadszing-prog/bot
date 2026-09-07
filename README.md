@@ -52,6 +52,12 @@ src/
     logger.js                  Leveled logger shared across all contexts
 config/
   config.example.json          Example local defaults (copy to config/config.json)
+public/                         Static web demo, published to Netlify (see "Deploy to Netlify" below)
+  index.html / app.js / styles.css   Upload-a-video Thai command demo (browser-only, no backend)
+  vendor/                       Generated at build time — copies of src/ modules used by public/app.js
+scripts/
+  build-netlify.js              Copies src/core + src/utils modules into public/vendor/ for Netlify builds
+netlify.toml                    Netlify build config (command + publish directory)
 .env.example                   Example env vars for Node tooling/tests
 test/                          Jest unit tests for parser/logger/permissions
 ```
@@ -102,12 +108,55 @@ popup's command box try:
 Status is shown live in the popup (พร้อมทำงาน / กำลังประมวลผล / เสร็จสิ้น /
 เกิดข้อผิดพลาด).
 
+## Deploy to Netlify (web demo)
+
+The browser extension itself can't be hosted on Netlify (Netlify serves
+static websites, not browser extensions). Instead, `public/` contains a
+standalone **web demo** that reuses the exact same command parser / video
+processor / AI vision modules from `src/core` — upload a video file in
+your browser, type a Thai command, and see the blur/pixelate/trim overlay
+applied live, all client-side (no backend required).
+
+### Option A: Netlify UI (recommended)
+
+1. Push this repository to GitHub (already done) and sign in to
+   [app.netlify.com](https://app.netlify.com).
+2. Click **Add new site → Import an existing project** and pick this repo.
+3. Netlify auto-detects `netlify.toml`, which sets:
+   - **Build command:** `npm run build:netlify`
+   - **Publish directory:** `public`
+4. Click **Deploy site**. Netlify will run the build (which copies the
+   required `src/` modules into `public/vendor/`) and publish `public/`.
+
+### Option B: Netlify CLI
+
+```bash
+npm install -g netlify-cli
+npm run build:netlify
+netlify deploy --dir=public --prod
+```
+
+### Using the deployed demo
+
+1. Open the deployed URL, upload a short video file.
+2. (Optional, for `ปกป้องใบหน้า`/`เบลอทะเบียน`) paste your OpenAI API key
+   under **การตั้งค่า** and click **บันทึกคีย์** — it's stored only in
+   your browser's `localStorage`, never sent anywhere except directly to
+   OpenAI's API.
+3. Type a command (e.g. `ตัดตอน 00:05-00:10`) and click **▶️ สั่งงาน**.
+
 ## Development
 
 Run the unit tests (command parser, logger, permissions fallback logic):
 
 ```bash
 npm test
+```
+
+To rebuild the Netlify site locally (regenerates `public/vendor/`):
+
+```bash
+npm run build:netlify
 ```
 
 ## Notes & limitations
