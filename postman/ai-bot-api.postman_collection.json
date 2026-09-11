@@ -1,0 +1,287 @@
+{
+  "info": {
+    "_postman_id": "ai-bot-api-collection",
+    "name": "AI Bot API",
+    "description": "Backend API for the AI Bot Browser Extension — Thai language video processing commands, real-time status, GraphQL, webhooks.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:3000" },
+    { "key": "token", "value": "" },
+    { "key": "apiKey", "value": "" },
+    { "key": "jobId", "value": "" },
+    { "key": "videoId", "value": "" },
+    { "key": "webhookId", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Register",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const d = pm.response.json();",
+                  "if (d.data) { pm.collectionVariables.set('token', d.data.token); pm.collectionVariables.set('apiKey', d.data.apiKey); }"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/auth/register", "host": ["{{baseUrl}}"], "path": ["api", "auth", "register"] },
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"you@example.com\",\n  \"password\": \"password123\",\n  \"name\": \"You\"\n}" }
+          }
+        },
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["const d = pm.response.json();", "if (d.data) { pm.collectionVariables.set('token', d.data.token); }"]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/auth/login", "host": ["{{baseUrl}}"], "path": ["api", "auth", "login"] },
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"you@example.com\",\n  \"password\": \"password123\"\n}" }
+          }
+        },
+        {
+          "name": "Me",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "******" }],
+            "url": { "raw": "{{baseUrl}}/api/auth/me", "host": ["{{baseUrl}}"], "path": ["api", "auth", "me"] }
+          }
+        },
+        {
+          "name": "Rotate API key",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "******" }],
+            "url": { "raw": "{{baseUrl}}/api/auth/api-key/rotate", "host": ["{{baseUrl}}"], "path": ["api", "auth", "api-key", "rotate"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Commands",
+      "item": [
+        {
+          "name": "Execute Thai command",
+          "event": [
+            {
+              "listen": "test",
+              "script": { "type": "text/javascript", "exec": ["const d = pm.response.json();", "if (d.data && d.data.job) { pm.collectionVariables.set('jobId', d.data.job.jobId); }"] }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "******" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": { "raw": "{{baseUrl}}/api/commands/execute", "host": ["{{baseUrl}}"], "path": ["api", "commands", "execute"] },
+            "body": { "mode": "raw", "raw": "{\n  \"command\": \"ปกป้องใบหน้า\"\n}" }
+          }
+        },
+        {
+          "name": "Execute trim command",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "******" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": { "raw": "{{baseUrl}}/api/commands/execute", "host": ["{{baseUrl}}"], "path": ["api", "commands", "execute"] },
+            "body": { "mode": "raw", "raw": "{\n  \"command\": \"ตัดตอน 00:05-00:10\",\n  \"priority\": 1\n}" }
+          }
+        },
+        {
+          "name": "Get command status",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "******" }],
+            "url": { "raw": "{{baseUrl}}/api/commands/status/{{jobId}}", "host": ["{{baseUrl}}"], "path": ["api", "commands", "status", "{{jobId}}"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Videos",
+      "item": [
+        {
+          "name": "Upload video",
+          "event": [
+            {
+              "listen": "test",
+              "script": { "type": "text/javascript", "exec": ["const d = pm.response.json();", "if (d.data && d.data.video) { pm.collectionVariables.set('videoId', d.data.video.videoId); }"] }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "******" }],
+            "url": { "raw": "{{baseUrl}}/api/videos/upload", "host": ["{{baseUrl}}"], "path": ["api", "videos", "upload"] },
+            "body": { "mode": "formdata", "formdata": [{ "key": "video", "type": "file", "src": "/path/to/video.mp4" }] }
+          }
+        },
+        {
+          "name": "Get video metadata",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "******" }],
+            "url": { "raw": "{{baseUrl}}/api/videos/{{videoId}}", "host": ["{{baseUrl}}"], "path": ["api", "videos", "{{videoId}}"] }
+          }
+        },
+        {
+          "name": "List videos",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "******" }],
+            "url": { "raw": "{{baseUrl}}/api/videos?page=1&limit=20", "host": ["{{baseUrl}}"], "path": ["api", "videos"], "query": [{ "key": "page", "value": "1" }, { "key": "limit", "value": "20" }] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Settings",
+      "item": [
+        {
+          "name": "Update settings",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "******" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": { "raw": "{{baseUrl}}/api/permissions/settings", "host": ["{{baseUrl}}"], "path": ["api", "permissions", "settings"] },
+            "body": { "mode": "raw", "raw": "{\n  \"enabledPlatforms\": [\"facebook\", \"tiktok\"],\n  \"preferences\": { \"language\": \"th\", \"defaultBlurStrength\": 50 },\n  \"apiKeys\": { \"openai\": \"sk-...\" }\n}" }
+          }
+        },
+        {
+          "name": "Get settings",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "******" }],
+            "url": { "raw": "{{baseUrl}}/api/permissions/settings", "host": ["{{baseUrl}}"], "path": ["api", "permissions", "settings"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "History",
+      "item": [
+        {
+          "name": "Get processing history/logs",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "******" }],
+            "url": { "raw": "{{baseUrl}}/api/history/logs?page=1&limit=20", "host": ["{{baseUrl}}"], "path": ["api", "history", "logs"], "query": [{ "key": "page", "value": "1" }, { "key": "limit", "value": "20" }] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Webhooks",
+      "item": [
+        {
+          "name": "Register webhook",
+          "event": [
+            {
+              "listen": "test",
+              "script": { "type": "text/javascript", "exec": ["const d = pm.response.json();", "if (d.data && d.data.webhook) { pm.collectionVariables.set('webhookId', d.data.webhook.webhookId); }"] }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "******" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": { "raw": "{{baseUrl}}/api/webhooks/register", "host": ["{{baseUrl}}"], "path": ["api", "webhooks", "register"] },
+            "body": { "mode": "raw", "raw": "{\n  \"url\": \"https://your-app.com/webhook\",\n  \"events\": [\"job_started\", \"job_completed\", \"job_failed\", \"processing_progress\"]\n}" }
+          }
+        },
+        {
+          "name": "List webhooks",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "******" }],
+            "url": { "raw": "{{baseUrl}}/api/webhooks", "host": ["{{baseUrl}}"], "path": ["api", "webhooks"] }
+          }
+        },
+        {
+          "name": "Delete webhook",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "******" }],
+            "url": { "raw": "{{baseUrl}}/api/webhooks/{{webhookId}}", "host": ["{{baseUrl}}"], "path": ["api", "webhooks", "{{webhookId}}"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "System",
+      "item": [
+        {
+          "name": "Health check",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/health", "host": ["{{baseUrl}}"], "path": ["api", "health"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "GraphQL",
+      "item": [
+        {
+          "name": "executeCommand (mutation)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "******" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": { "raw": "{{baseUrl}}/graphql", "host": ["{{baseUrl}}"], "path": ["graphql"] },
+            "body": { "mode": "raw", "raw": "{\n  \"query\": \"mutation { executeCommand(command: \\\"ปกป้องใบหน้า\\\") { jobId status parsedCommand { action } } }\"\n}" }
+          }
+        },
+        {
+          "name": "getCommandStatus (query)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "******" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": { "raw": "{{baseUrl}}/graphql", "host": ["{{baseUrl}}"], "path": ["graphql"] },
+            "body": { "mode": "raw", "raw": "{\n  \"query\": \"query($jobId: ID!) { getCommandStatus(jobId: $jobId) { status progress results } }\",\n  \"variables\": { \"jobId\": \"{{jobId}}\" }\n}" }
+          }
+        },
+        {
+          "name": "getUserSettings (query)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "******" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": { "raw": "{{baseUrl}}/graphql", "host": ["{{baseUrl}}"], "path": ["graphql"] },
+            "body": { "mode": "raw", "raw": "{\n  \"query\": \"query { getUserSettings { enabledPlatforms preferences { defaultBlurStrength } } }\"\n}" }
+          }
+        }
+      ]
+    }
+  ]
+}
