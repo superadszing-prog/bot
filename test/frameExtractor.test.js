@@ -169,4 +169,34 @@ describe('frameExtractor.extractFrames', () => {
 
     expect(frames).toHaveLength(3); // falls back to interval of 1 second: t = 0, 1, 2
   });
+
+  test('caps samples when duration is infinite and end is omitted', async () => {
+    const video = createMockVideo({ duration: Infinity, paused: true });
+    let seekedHandler;
+    video.addEventListener = jest.fn((event, handler) => {
+      if (event === 'seeked') seekedHandler = handler;
+    });
+    video.removeEventListener = jest.fn();
+    Object.defineProperty(video, 'currentTime', {
+      get() {
+        return this._currentTime;
+      },
+      set(value) {
+        this._currentTime = value;
+        if (seekedHandler) seekedHandler();
+      },
+      configurable: true
+    });
+    video._currentTime = 0;
+
+    const frames = await extractFrames(video, {
+      start: 0,
+      intervalSeconds: 1,
+      maxWidth: 640,
+      maxSamples: 3
+    });
+
+    expect(frames).toHaveLength(3);
+    expect(frames.map((f) => f.timestamp)).toEqual([0, 1, 2]);
+  });
 });

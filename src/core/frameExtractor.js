@@ -41,18 +41,25 @@
    * optional start/end range. Returns a promise resolving to an array of
    * { timestamp, dataUrl } objects.
    */
-  async function extractFrames(videoEl, { start = 0, end = null, intervalSeconds = 1, maxWidth = 640 } = {}) {
+  async function extractFrames(
+    videoEl,
+    { start = 0, end = null, intervalSeconds = 1, maxWidth = 640, maxSamples = 300 } = {}
+  ) {
     if (typeof document === 'undefined' || !videoEl) {
       return [];
     }
     const safeInterval = intervalSeconds > 0 ? intervalSeconds : 1;
 
-    const duration = end !== null ? end : videoEl.duration || 0;
+    const safeMaxSamples = Number.isFinite(maxSamples) && maxSamples > 0 ? Math.floor(maxSamples) : 300;
+    const requestedDuration = end !== null ? end : videoEl.duration;
+    const duration = Number.isFinite(requestedDuration)
+      ? Math.max(start, requestedDuration)
+      : start + safeInterval * (safeMaxSamples - 1);
     const frames = [];
     const wasPaused = videoEl.paused;
     const originalTime = videoEl.currentTime;
 
-    for (let t = start; t <= duration; t += safeInterval) {
+    for (let t = start, sampled = 0; t <= duration && sampled < safeMaxSamples; t += safeInterval, sampled += 1) {
       await seekTo(videoEl, t);
       const dataUrl = captureFrame(videoEl, { maxWidth });
       if (dataUrl) {

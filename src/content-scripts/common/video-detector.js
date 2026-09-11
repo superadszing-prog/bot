@@ -25,6 +25,7 @@
 
     _observeVideos() {
       const scan = () => {
+        this._pruneDisconnectedProcessors();
         document.querySelectorAll('video').forEach((videoEl) => {
           if (!this.processors.has(videoEl)) {
             const processor = new VideoProcessor(videoEl, logger);
@@ -36,6 +37,15 @@
       scan();
       const observer = new MutationObserver(scan);
       observer.observe(document.body, { childList: true, subtree: true });
+    }
+
+    _pruneDisconnectedProcessors() {
+      for (const [videoEl, processor] of this.processors.entries()) {
+        if (!videoEl.isConnected) {
+          processor.stop();
+          this.processors.delete(videoEl);
+        }
+      }
     }
 
     _listenForCommands() {
@@ -62,6 +72,7 @@
         throw new Error('คำสั่งไม่ถูกต้อง หรือยังไม่รองรับ');
       }
 
+      this._pruneDisconnectedProcessors();
       if (this.processors.size === 0) {
         this._updateStatus('error', 'ไม่พบวิดีโอในหน้านี้');
         throw new Error('ไม่พบวิดีโอในหน้านี้');
@@ -88,16 +99,16 @@
           logger.warn('No API key configured; skipping AI region detection');
         } else {
           const frame = self.AIBotFrameExtractor.captureFrame(videoEl, { maxWidth: 640 });
+          const mappedRegions = [];
           for (const action of protectActions) {
             try {
               const regions = await detectRegions(frame, action.target, { apiKey: settings.apiKey });
-              processor.setRegions(
-                regions.map((r) => ({ ...r, method: action.method }))
-              );
+              mappedRegions.push(...regions.map((r) => ({ ...r, method: action.method })));
             } catch (error) {
               logger.error('AI vision detection failed', error.message);
             }
           }
+          processor.setRegions(mappedRegions);
         }
       }
 

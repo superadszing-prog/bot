@@ -22,6 +22,13 @@ describe('commandParser', () => {
     ]);
   });
 
+  test('normalizes reversed trim ranges so start is always <= end', () => {
+    const actions = parseCommand('ตัดตอน 00:10-00:05');
+    expect(actions).toEqual([
+      { type: 'trim', target: null, method: 'trim', range: { start: 5, end: 10 } }
+    ]);
+  });
+
   test('parses multiple actions in a single command', () => {
     const actions = parseCommand('ปกป้องใบหน้าและเบลอทะเบียน ตัดตอน 0:05-0:15');
     expect(actions).toHaveLength(3);
@@ -39,6 +46,7 @@ describe('commandParser', () => {
     expect(parseCommand('   ')).toEqual([]);
     expect(parseCommand(null)).toEqual([]);
     expect(parseCommand('สวัสดีครับ')).toEqual([]);
+    expect(parseCommand('ใส่ลายน้ำ')).toEqual([]);
   });
 
   test('isRecognized reflects whether any action matched', () => {

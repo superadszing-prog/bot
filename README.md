@@ -6,8 +6,10 @@ Works on **Chrome / Firefox / Edge** (Manifest V3). Lets you type commands
 in **Thai** — e.g. `ปกป้องใบหน้า`, `เบลอทะเบียน`, `ตัดตอน 00:05-00:10` — that
 are applied **in real time** to videos already posted on Facebook, TikTok
 and Instagram feeds, without re-uploading or deleting the original post.
-All processing happens locally in your browser; permissions are **off by
-default** and only activate for the sites you explicitly enable.
+Overlay rendering happens locally in your browser; for protect commands,
+selected frames are sent to your configured AI provider for detection.
+Permissions are **off by default** and only activate for the sites you
+explicitly enable.
 
 ## Features
 

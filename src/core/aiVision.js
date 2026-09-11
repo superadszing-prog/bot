@@ -28,6 +28,10 @@
       throw new Error('OpenAI API key is required. Set it in the extension permission panel.');
     }
 
+    if (shouldUseRuntimeProxy(config)) {
+      return detectRegionsViaRuntime(imageDataUrl, target, config);
+    }
+
     const fetchImpl = config.fetchImpl || (typeof fetch !== 'undefined' ? fetch : null);
     if (!fetchImpl) {
       throw new Error('No fetch implementation available in this environment.');
@@ -66,6 +70,44 @@
 
     const json = await response.json();
     return parseRegions(json);
+  }
+
+  function shouldUseRuntimeProxy(config) {
+    return (
+      !config.fetchImpl &&
+      typeof chrome !== 'undefined' &&
+      chrome.runtime &&
+      typeof chrome.runtime.sendMessage === 'function' &&
+      typeof document !== 'undefined'
+    );
+  }
+
+  function detectRegionsViaRuntime(imageDataUrl, target, config) {
+    return new Promise((resolve, reject) => {
+      chrome.runtime.sendMessage(
+        {
+          type: 'AI_VISION_DETECT',
+          payload: {
+            imageDataUrl,
+            target,
+            apiKey: config.apiKey,
+            endpoint: config.endpoint,
+            model: config.model
+          }
+        },
+        (response) => {
+          if (chrome.runtime.lastError) {
+            reject(new Error(chrome.runtime.lastError.message));
+            return;
+          }
+          if (!response || !response.ok) {
+            reject(new Error((response && response.error) || 'AI vision request failed.'));
+            return;
+          }
+          resolve(Array.isArray(response.regions) ? response.regions : []);
+        }
+      );
+    });
   }
 
   function buildPrompt(target) {

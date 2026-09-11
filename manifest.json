@@ -21,7 +21,8 @@
   "host_permissions": [
     "*://*.facebook.com/*",
     "*://*.tiktok.com/*",
-    "*://*.instagram.com/*"
+    "*://*.instagram.com/*",
+    "https://api.openai.com/*"
   ],
   "background": {
     "service_worker": "src/background/service-worker.js"

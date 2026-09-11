@@ -141,10 +141,12 @@
           return;
         }
         const frame = captureFrame(videoEl, { maxWidth: 640 });
+        const mappedRegions = [];
         for (const action of protectActions) {
           const regions = await detectRegions(frame, action.target, { apiKey });
-          processor.setRegions(regions.map((r) => ({ ...r, method: action.method })));
+          mappedRegions.push(...regions.map((r) => ({ ...r, method: action.method })));
         }
+        processor.setRegions(mappedRegions);
       }
 
       for (const action of trimActions) {

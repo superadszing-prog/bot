@@ -71,6 +71,8 @@
   runButton.addEventListener('click', runCommand);
   saveSettingsButton.addEventListener('click', saveSettings);
 
+  const pollTimer = setInterval(pollStatus, 1000);
+  window.addEventListener('unload', () => clearInterval(pollTimer));
   loadSettings();
   pollStatus();
 })();

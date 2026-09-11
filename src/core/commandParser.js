@@ -52,12 +52,6 @@
       method: 'trim',
       type: 'trim',
       keywords: ['ตัดตอน', 'ตัดคลิป', 'trim']
-    },
-    {
-      target: null,
-      method: 'watermark',
-      type: 'watermark',
-      keywords: ['ใส่ลายน้ำ', 'เพิ่มลายน้ำ', 'watermark']
     }
   ];
 
@@ -86,7 +80,7 @@
     if (start === null || end === null) {
       return null;
     }
-    return { start, end };
+    return start <= end ? { start, end } : { start: end, end: start };
   }
 
   /**
