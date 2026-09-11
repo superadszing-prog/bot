@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <title>AI Bot - ผู้ช่วยปกป้องวิดีโอ</title>
+  <link rel="stylesheet" href="popup.css" />
+</head>
+<body>
+  <main class="app">
+    <header class="app__header">
+      <h1>🤖 AI Bot</h1>
+      <p class="app__subtitle">สั่งงานปกป้องวิดีโอด้วยภาษาไทย</p>
+    </header>
+
+    <section class="app__section">
+      <label for="command-input">พิมพ์คำสั่ง เช่น "ปกป้องใบหน้า", "เบลอทะเบียน", "ตัดตอน 00:05-00:10"</label>
+      <textarea id="command-input" rows="3" placeholder="เช่น ปกป้องใบหน้าและเบลอทะเบียน"></textarea>
+      <button id="run-command-btn" type="button">▶️ สั่งงาน</button>
+    </section>
+
+    <section class="app__section">
+      <h2>สถานะการทำงาน</h2>
+      <div id="status-indicator" class="status status--idle">
+        <span class="status__dot"></span>
+        <span id="status-text">พร้อมทำงาน</span>
+      </div>
+    </section>
+
+    <section class="app__section">
+      <h2>การอนุญาต (Permissions)</h2>
+      <label class="permission-row">
+        <span>Facebook</span>
+        <input type="checkbox" id="perm-facebook" />
+      </label>
+      <label class="permission-row">
+        <span>TikTok</span>
+        <input type="checkbox" id="perm-tiktok" />
+      </label>
+      <label class="permission-row">
+        <span>Instagram</span>
+        <input type="checkbox" id="perm-instagram" />
+      </label>
+      <label for="api-key-input">OpenAI API Key</label>
+      <input type="password" id="api-key-input" placeholder="sk-..." autocomplete="off" />
+      <p class="hint">คีย์จะถูกเก็บไว้ในเครื่องของคุณเท่านั้น (chrome.storage.local) โดยไม่มีการเข้ารหัส กรุณาอย่าใช้ในเครื่องที่ไม่น่าเชื่อถือ</p>
+      <button id="save-settings-btn" type="button">💾 บันทึกการตั้งค่า</button>
+    </section>
+  </main>
+  <script src="../utils/logger.js"></script>
+  <script src="../core/permissions.js"></script>
+  <script src="popup.js"></script>
+</body>
+</html>

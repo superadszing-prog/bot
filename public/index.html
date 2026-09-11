@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Bot - ผู้ช่วยปกป้องวิดีโอ (เว็บดีโม)</title>
+  <meta name="description" content="สั่งงานปกป้องวิดีโอด้วยภาษาไทยแบบเรียลไทม์ - เบลอใบหน้า เบลอทะเบียน ตัดตอน" />
+  <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <main class="app">
+    <header class="app__header">
+      <h1>🤖 AI Bot</h1>
+      <p class="app__subtitle">เว็บดีโม: สั่งงานปกป้องวิดีโอด้วยภาษาไทยแบบเรียลไทม์</p>
+      <p class="app__note">
+        อัปโหลดวิดีโอ แล้วพิมพ์คำสั่ง เช่น <code>ปกป้องใบหน้า</code>,
+        <code>เบลอทะเบียน</code>, <code>ตัดตอน 00:05-00:10</code> —
+        การแสดงผลปกป้องวิดีโอทำงานในเบราว์เซอร์ของคุณ และจะส่งเฟรมที่เลือกไปยังผู้ให้บริการ AI ที่คุณตั้งค่าไว้เพื่อการตรวจจับ
+      </p>
+    </header>
+
+    <section class="app__section">
+      <label for="video-input">1) เลือกไฟล์วิดีโอ</label>
+      <input type="file" id="video-input" accept="video/*" />
+      <div class="video-stage">
+        <video id="preview-video" playsinline controls></video>
+      </div>
+    </section>
+
+    <section class="app__section">
+      <label for="command-input">2) พิมพ์คำสั่ง</label>
+      <textarea id="command-input" rows="2" placeholder="เช่น ปกป้องใบหน้าและเบลอทะเบียน"></textarea>
+      <button id="run-command-btn" type="button">▶️ สั่งงาน</button>
+    </section>
+
+    <section class="app__section">
+      <h2>สถานะการทำงาน</h2>
+      <div id="status-indicator" class="status status--idle">
+        <span class="status__dot"></span>
+        <span id="status-text">พร้อมทำงาน (กรุณาอัปโหลดวิดีโอก่อน)</span>
+      </div>
+    </section>
+
+    <section class="app__section">
+      <h2>การตั้งค่า (เก็บในเครื่องของคุณเท่านั้น)</h2>
+      <label for="api-key-input">OpenAI API Key (ใช้สำหรับตรวจจับใบหน้า/ทะเบียนอัตโนมัติ)</label>
+      <input type="password" id="api-key-input" placeholder="sk-..." autocomplete="off" />
+      <p class="hint">
+        คีย์จะถูกเก็บไว้ใน localStorage ของเบราว์เซอร์นี้เท่านั้น (มีการเข้ารหัสแบบพื้นฐาน
+        ไม่ใช่การเข้ารหัสระดับสูง) และไม่ถูกส่งไปที่เซิร์ฟเวอร์ใด ๆ นอกจาก OpenAI โดยตรง
+      </p>
+      <button id="save-key-btn" type="button">💾 บันทึกคีย์</button>
+    </section>
+
+    <footer class="app__footer">
+      <p>
+        ต้องการใช้งานแบบฝังในโซเชียลมีเดีย (Facebook/TikTok/Instagram) แบบเรียลไทม์?
+        ดูโปรเจกต์ Browser Extension ฉบับเต็มได้ที่
+        <a href="https://github.com/superadszing-prog/bot" target="_blank" rel="noopener">GitHub</a>.
+      </p>
+    </footer>
+  </main>
+
+  <script src="vendor/logger.js"></script>
+  <script src="vendor/commandParser.js"></script>
+  <script src="vendor/frameExtractor.js"></script>
+  <script src="vendor/videoProcessor.js"></script>
+  <script src="vendor/aiVision.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

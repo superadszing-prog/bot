@@ -1,64 +1,22 @@
 {
-  "name": "ai-bot-api",
+  "name": "ai-bot-browser-extension",
   "version": "1.0.0",
-  "description": "Backend API Server for the AI Bot Browser Extension - Thai language video processing commands, real-time status, GraphQL, webhooks",
-  "main": "src/index.js",
+  "description": "AI Bot Browser Extension - Real-time video processing with Thai language commands for social media content protection (Facebook, TikTok, Instagram)",
+  "private": true,
   "license": "MIT",
-  "engines": {
-    "node": ">=18.0.0"
-  },
   "scripts": {
-    "start": "node src/index.js",
-    "dev": "nodemon src/index.js",
-    "test": "NODE_ENV=test jest --runInBand --forceExit",
-    "test:watch": "NODE_ENV=test jest --watch"
-  },
-  "dependencies": {
-    "@apollo/server": "^4.13.0",
-    "@graphql-tools/schema": "^10.0.6",
-    "bcryptjs": "^2.4.3",
-    "bullmq": "^5.21.2",
-    "compression": "^1.7.5",
-    "cors": "^2.8.5",
-    "dotenv": "^16.4.5",
-    "express": "^4.21.2",
-    "express-rate-limit": "^7.4.1",
-    "express-validator": "^7.2.0",
-    "graphql": "^16.9.0",
-    "graphql-scalars": "^1.26.0",
-    "graphql-subscriptions": "^2.0.0",
-    "graphql-type-json": "^0.3.2",
-    "graphql-ws": "^5.16.2",
-    "helmet": "^8.0.0",
-    "ioredis": "^5.4.1",
-    "jsonwebtoken": "^9.0.2",
-    "mongoose": "^8.22.1",
-    "multer": "^2.3.0",
-    "socket.io": "^4.8.3",
-    "winston": "^3.15.0",
-    "ws": "^8.21.3"
-  },
-  "optionalDependencies": {
-    "@aws-sdk/client-s3": "^3.658.0"
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "build:netlify": "node scripts/build-netlify.js"
   },
   "devDependencies": {
-    "jest": "^29.7.0",
-    "mongodb-memory-server": "^10.1.2",
-    "nodemon": "^3.1.7",
-    "socket.io-client": "^4.8.3",
-    "supertest": "^7.0.0"
+    "jest": "^29.7.0"
   },
-  "jest": {
-    "testEnvironment": "node",
-    "testMatch": [
-      "**/tests/**/*.test.js"
-    ],
-    "setupFilesAfterEnv": [
-      "<rootDir>/tests/setup.js"
-    ],
-    "testTimeout": 30000,
-    "coveragePathIgnorePatterns": [
-      "/node_modules/"
-    ]
-  }
+  "keywords": [
+    "browser-extension",
+    "chrome-extension",
+    "ai",
+    "video-processing",
+    "thai-language"
+  ]
 }
