@@ -11,6 +11,7 @@ const User = require('../models/User');
 const Webhook = require('../models/Webhook');
 const Video = require('../models/Video');
 const ActivityLog = require('../models/ActivityLog');
+const chatService = require('../services/chatService');
 const crypto = require('crypto');
 const { GraphQLError } = require('graphql');
 const { ApiError, ERROR_CODES } = require('../constants/errors');
@@ -96,6 +97,14 @@ const resolvers = {
       requireUser(context);
       return getQueue().getStats();
     },
+    getChatSessions: async (_parent, _args, context) => {
+      const user = requireUser(context);
+      return chatService.listChatSessionsForUser(user._id);
+    },
+    getChatSession: async (_parent, { sessionId }, context) => {
+      const user = requireUser(context);
+      return chatService.getChatSessionForUser(sessionId, user._id);
+    },
   }),
 
   Mutation: guardAll({
@@ -104,6 +113,12 @@ const resolvers = {
       const job = await jobService.createJob({ userId: user._id, command, videoId, priority });
       await logActivity(user._id, 'command_executed', { jobId: job.jobId, command });
       return job;
+    },
+    sendChatMessage: async (_parent, { message, sessionId = null }, context) => {
+      const user = requireUser(context);
+      const result = await chatService.sendMessage({ userId: user._id, message, sessionId });
+      await logActivity(user._id, 'chat_message_sent', { sessionId: result.session.sessionId });
+      return result;
     },
     uploadVideo: async (_parent, { videoId }, context) => {
       // Binary upload happens over REST multipart; this mutation links an

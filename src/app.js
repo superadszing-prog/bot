@@ -10,6 +10,7 @@ const { errorHandler, notFoundHandler } = require('./middleware/errorHandler');
 
 const authRoutes = require('./routes/auth');
 const commandRoutes = require('./routes/commands');
+const chatRoutes = require('./routes/chat');
 const videoRoutes = require('./routes/videos');
 const permissionRoutes = require('./routes/permissions');
 const historyRoutes = require('./routes/history');
@@ -75,6 +76,7 @@ function createApp({ graphqlMiddleware } = {}) {
 
   app.use('/api/auth', authRoutes);
   app.use('/api/commands', commandRoutes);
+  app.use('/api/chat', chatRoutes);
   app.use('/api/videos', videoRoutes);
   app.use('/api/permissions', permissionRoutes);
   app.use('/api/history', historyRoutes);

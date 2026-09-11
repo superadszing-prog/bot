@@ -35,6 +35,7 @@ file storage (local or AWS S3).
 ## Features
 
 - **REST API** for commands, video upload, settings, history, webhooks, health
+- **LNWBOT chat API** for conversational help, command guidance, and user-aware summaries
 - **GraphQL** endpoint (HTTP queries/mutations + WebSocket subscriptions)
 - **Real-time** job progress via **Socket.io** and GraphQL subscriptions
 - **Queue management** with BullMQ (Redis) + automatic in-memory fallback
@@ -44,6 +45,7 @@ file storage (local or AWS S3).
 - **Webhooks** with HMAC-SHA256 signature verification + retry delivery
 - **File storage** — local disk or AWS S3 (optional), with metadata extraction
 - **Activity logging** of every meaningful action
+- **LNWBOT** assistant that can explain supported commands, summarize recent jobs, and read current settings
 
 ---
 
@@ -246,6 +248,21 @@ Base URL: `/api`. All responses use a consistent envelope:
 | POST | `/api/commands/execute` | Execute a Thai command → creates a job (202) |
 | GET | `/api/commands/status/:jobId` | Job status/progress/results |
 
+### LNWBOT chat
+
+| Method | Path | Description |
+|--------|------|-------------|
+| POST | `/api/chat/messages` | Send a message to LNWBOT and receive an assistant reply |
+| GET | `/api/chat/sessions` | List your chat sessions |
+| GET | `/api/chat/sessions/:sessionId` | Read a chat session and its messages |
+
+```bash
+curl -X POST http://localhost:3000/api/chat/messages \
+  -H "Authorization: ******" \
+  -H "Content-Type: application/json" \
+  -d '{"message":"มีคำสั่งอะไรบ้าง"}'
+```
+
 **Execute example**
 ```bash
 curl -X POST http://localhost:3000/api/commands/execute \
@@ -317,11 +334,14 @@ getUserSettings: Settings
 getProcessingHistory(page: Int, limit: Int, status: JobStatus): JobPage!
 getActivityLogs(page: Int, limit: Int): [ActivityLogEntry!]!
 getQueueStats: JSON!
+getChatSessions: [ChatSession!]!
+getChatSession(sessionId: ID!): ChatSession!
 ```
 
 ### Mutations
 ```graphql
 executeCommand(command: String!, videoId: ID, priority: Int): Job!
+sendChatMessage(message: String!, sessionId: ID): ChatReplyPayload!
 uploadVideo(videoId: ID!): UploadPayload!      # link an uploaded video into workspace
 updateSettings(input: SettingsInput!): Settings!
 registerWebhook(url: String!, events: [String!], secret: String): Webhook!

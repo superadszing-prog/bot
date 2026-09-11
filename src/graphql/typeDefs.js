@@ -93,6 +93,27 @@ const typeDefs = /* GraphQL */ `
     video: Video!
   }
 
+  type ChatMessage {
+    messageId: ID!
+    role: String!
+    content: String!
+    suggestions: [String!]!
+    createdAt: DateTime
+  }
+
+  type ChatSession {
+    sessionId: ID!
+    title: String!
+    messages: [ChatMessage!]!
+    createdAt: DateTime
+    updatedAt: DateTime
+  }
+
+  type ChatReplyPayload {
+    session: ChatSession!
+    reply: ChatMessage!
+  }
+
   input SettingsInput {
     enabledPlatforms: [String!]
     apiKeys: JSON
@@ -106,10 +127,13 @@ const typeDefs = /* GraphQL */ `
     getProcessingHistory(page: Int = 1, limit: Int = 20, status: JobStatus): JobPage!
     getActivityLogs(page: Int = 1, limit: Int = 20): [ActivityLogEntry!]!
     getQueueStats: JSON!
+    getChatSessions: [ChatSession!]!
+    getChatSession(sessionId: ID!): ChatSession!
   }
 
   type Mutation {
     executeCommand(command: String!, videoId: ID, priority: Int): Job!
+    sendChatMessage(message: String!, sessionId: ID): ChatReplyPayload!
     uploadVideo(videoId: ID!): UploadPayload!
     updateSettings(input: SettingsInput!): Settings!
     registerWebhook(url: String!, events: [String!], secret: String): Webhook!

@@ -81,6 +81,26 @@ describe('GraphQL API', () => {
     expect(m.body.data.registerWebhook.webhookId).toMatch(/^wh_/);
   });
 
+  test('sendChatMessage mutation creates a LNWBOT session and getChatSession reads it', async () => {
+    const { token } = await registerUser(app);
+    const created = await gql(
+      'mutation($message: String!) { sendChatMessage(message: $message) { session { sessionId title messages { role } } reply { role content } } }',
+      { message: 'มีคำสั่งอะไรบ้าง' },
+      token
+    );
+    expect(created.body.errors).toBeUndefined();
+    const sessionId = created.body.data.sendChatMessage.session.sessionId;
+    expect(created.body.data.sendChatMessage.reply.content).toMatch(/LNWBOT|คำสั่ง/);
+
+    const fetched = await gql(
+      'query($sessionId: ID!) { getChatSession(sessionId: $sessionId) { sessionId messages { role content } } }',
+      { sessionId },
+      token
+    );
+    expect(fetched.body.errors).toBeUndefined();
+    expect(fetched.body.data.getChatSession.messages).toHaveLength(2);
+  });
+
   test('unauthenticated queries are rejected with UNAUTHORIZED', async () => {
     const q = await gql('query { getUserSettings { enabledPlatforms } }', {});
     expect(q.body.errors).toBeDefined();
