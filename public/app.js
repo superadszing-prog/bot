@@ -9,7 +9,7 @@
   const logger = window.AIBotLogger.createLogger('web-demo');
   const { parseCommand } = window.AIBotCommandParser;
   const { VideoProcessor } = window.AIBotVideoProcessor;
-  const { captureFrame } = window.AIBotFrameExtractor;
+  const { captureFrame, extractFrames } = window.AIBotFrameExtractor;
   const { detectRegions } = window.AIBotAIVision;
 
   const STORAGE_KEY = 'aiBotWebDemo.apiKey';
@@ -140,11 +140,30 @@
           setStatus('error', 'กรุณาใส่ OpenAI API Key เพื่อใช้คำสั่งปกป้อง/เบลอ');
           return;
         }
-        const frame = captureFrame(videoEl, { maxWidth: 640 });
+        const frameStart = Math.max(0, videoEl.currentTime || 0);
+        const sampledFrames = await extractFrames(videoEl, {
+          start: frameStart,
+          end: frameStart + 2,
+          intervalSeconds: 1,
+          maxWidth: 640,
+          maxSamples: 3
+        });
+        const frameDataUrls = sampledFrames.map((frame) => frame.dataUrl).filter(Boolean);
+        if (frameDataUrls.length === 0) {
+          const singleFrame = captureFrame(videoEl, { maxWidth: 640 });
+          if (singleFrame) {
+            frameDataUrls.push(singleFrame);
+          }
+        }
+        if (frameDataUrls.length === 0) {
+          throw new Error('ไม่สามารถดึงเฟรมวิดีโอเพื่อปกป้องข้อมูลได้');
+        }
         const mappedRegions = [];
         for (const action of protectActions) {
-          const regions = await detectRegions(frame, action.target, { apiKey });
-          mappedRegions.push(...regions.map((r) => ({ ...r, method: action.method })));
+          for (const frameDataUrl of frameDataUrls) {
+            const regions = await detectRegions(frameDataUrl, action.target, { apiKey });
+            mappedRegions.push(...regions.map((r) => ({ ...r, method: action.method })));
+          }
         }
         processor.setRegions(mappedRegions);
       }

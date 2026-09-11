@@ -11,8 +11,9 @@
   const logger = self.AIBotLogger.createLogger('content');
   const { parseCommand } = self.AIBotCommandParser;
   const { VideoProcessor } = self.AIBotVideoProcessor;
-  const { extractFrames } = self.AIBotFrameExtractor;
+  const { captureFrame, extractFrames } = self.AIBotFrameExtractor;
   const { detectRegions } = self.AIBotAIVision;
+  const { isSiteEnabled } = self.AIBotPermissions;
 
   class VideoBotController {
     constructor(platform) {
@@ -81,9 +82,19 @@
       this._updateStatus('processing', `กำลังประมวลผล: ${rawCommand}`);
 
       const settings = await self.AIBotPermissions.getSettings();
+      if (!isSiteEnabled(settings, this.platform)) {
+        this._updateStatus('error', `ยังไม่ได้เปิดสิทธิ์สำหรับ ${this.platform}`);
+        throw new Error(`ยังไม่ได้เปิดสิทธิ์สำหรับ ${this.platform}`);
+      }
+
       const results = [];
-      for (const [videoEl, processor] of this.processors) {
-        results.push(await this._applyActions(videoEl, processor, actions, settings));
+      try {
+        for (const [videoEl, processor] of this.processors) {
+          results.push(await this._applyActions(videoEl, processor, actions, settings));
+        }
+      } catch (error) {
+        this._updateStatus('error', error.message || 'ประมวลผลไม่สำเร็จ');
+        throw error;
       }
 
       this._updateStatus('done', `เสร็จสิ้น: ${rawCommand}`);
@@ -96,20 +107,45 @@
 
       if (protectActions.length > 0) {
         if (!settings.apiKey) {
-          logger.warn('No API key configured; skipping AI region detection');
-        } else {
-          const frame = self.AIBotFrameExtractor.captureFrame(videoEl, { maxWidth: 640 });
-          const mappedRegions = [];
-          for (const action of protectActions) {
+          throw new Error('กรุณาใส่ OpenAI API Key เพื่อใช้คำสั่งปกป้อง/เบลอ');
+        }
+
+        const frameStart = Math.max(0, videoEl.currentTime || 0);
+        const sampledFrames = await extractFrames(videoEl, {
+          start: frameStart,
+          end: frameStart + 2,
+          intervalSeconds: 1,
+          maxWidth: 640,
+          maxSamples: 3
+        });
+        const frameDataUrls = sampledFrames.map((frame) => frame.dataUrl).filter(Boolean);
+        if (frameDataUrls.length === 0) {
+          const singleFrame = captureFrame(videoEl, { maxWidth: 640 });
+          if (singleFrame) {
+            frameDataUrls.push(singleFrame);
+          }
+        }
+        if (frameDataUrls.length === 0) {
+          throw new Error('ไม่สามารถดึงเฟรมวิดีโอเพื่อปกป้องข้อมูลได้');
+        }
+
+        const mappedRegions = [];
+        let detectError = null;
+        for (const action of protectActions) {
+          for (const frameDataUrl of frameDataUrls) {
             try {
-              const regions = await detectRegions(frame, action.target, { apiKey: settings.apiKey });
+              const regions = await detectRegions(frameDataUrl, action.target, { apiKey: settings.apiKey });
               mappedRegions.push(...regions.map((r) => ({ ...r, method: action.method })));
             } catch (error) {
               logger.error('AI vision detection failed', error.message);
+              detectError = detectError || error;
             }
           }
-          processor.setRegions(mappedRegions);
         }
+        if (detectError) {
+          throw new Error(`AI vision detection failed: ${detectError.message}`);
+        }
+        processor.setRegions(mappedRegions);
       }
 
       for (const action of trimActions) {

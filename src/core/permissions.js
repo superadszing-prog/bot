@@ -33,7 +33,10 @@
   function getSettings() {
     const area = getStorageArea();
     if (!area) {
-      return Promise.resolve({ ...DEFAULT_SETTINGS });
+      return Promise.resolve({
+        ...DEFAULT_SETTINGS,
+        enabledSites: { ...DEFAULT_SETTINGS.enabledSites }
+      });
     }
     return new Promise((resolve) => {
       area.get([STORAGE_KEY], (result) => {

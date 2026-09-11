@@ -30,10 +30,13 @@
     const canvas = document.createElement('canvas');
     canvas.width = width;
     canvas.height = height;
-    const ctx = canvas.getContext('2d');
-    ctx.drawImage(videoEl, 0, 0, width, height);
-
-    return canvas.toDataURL('image/jpeg', options.quality || 0.8);
+    try {
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(videoEl, 0, 0, width, height);
+      return canvas.toDataURL('image/jpeg', options.quality || 0.8);
+    } catch (error) {
+      return null;
+    }
   }
 
   /**
@@ -59,17 +62,19 @@
     const wasPaused = videoEl.paused;
     const originalTime = videoEl.currentTime;
 
-    for (let t = start, sampled = 0; t <= duration && sampled < safeMaxSamples; t += safeInterval, sampled += 1) {
-      await seekTo(videoEl, t);
-      const dataUrl = captureFrame(videoEl, { maxWidth });
-      if (dataUrl) {
-        frames.push({ timestamp: t, dataUrl });
+    try {
+      for (let t = start, sampled = 0; t <= duration && sampled < safeMaxSamples; t += safeInterval, sampled += 1) {
+        await seekTo(videoEl, t);
+        const dataUrl = captureFrame(videoEl, { maxWidth });
+        if (dataUrl) {
+          frames.push({ timestamp: t, dataUrl });
+        }
       }
-    }
-
-    videoEl.currentTime = originalTime;
-    if (!wasPaused) {
-      videoEl.play().catch(() => {});
+    } finally {
+      videoEl.currentTime = originalTime;
+      if (!wasPaused) {
+        videoEl.play().catch(() => {});
+      }
     }
 
     return frames;

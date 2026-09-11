@@ -35,7 +35,35 @@ function createMockVideo(overrides) {
   };
 }
 
+function createMockParent() {
+  return {
+    children: [],
+    style: {},
+    appendChild(node) {
+      node.parentElement = this;
+      this.children.push(node);
+    },
+    removeChild(node) {
+      this.children = this.children.filter((child) => child !== node);
+      node.parentElement = null;
+    }
+  };
+}
+
 describe('VideoProcessor', () => {
+  let originalDocument;
+  let originalWindow;
+
+  beforeEach(() => {
+    originalDocument = global.document;
+    originalWindow = global.window;
+  });
+
+  afterEach(() => {
+    global.document = originalDocument;
+    global.window = originalWindow;
+  });
+
   test('trim ranges mark the corresponding timestamps as trimmed', () => {
     const processor = new VideoProcessor(createMockVideo());
     processor.addTrimRange(5, 10);
@@ -81,5 +109,29 @@ describe('VideoProcessor', () => {
     processor._applyRegionEffect({ x: 0, y: 0, width: 0.5, height: 0.5, method: 'blur' });
 
     expect(canvas.__ctx.drawImage).toHaveBeenCalledWith(video, 0, 0, 160, 120, 0, 0, 160, 120);
+  });
+
+  test('stop removes mounted overlay canvas and clears references', () => {
+    const canvas = createMockCanvas();
+    const parent = createMockParent();
+    const video = createMockVideo({ parentElement: parent });
+    global.document = {
+      createElement: jest.fn(() => canvas)
+    };
+    global.window = {
+      getComputedStyle: jest.fn(() => ({ position: 'relative' }))
+    };
+    global.requestAnimationFrame = jest.fn(() => 1);
+    global.cancelAnimationFrame = jest.fn();
+
+    const processor = new VideoProcessor(video);
+    processor.start();
+    expect(parent.children).toContain(canvas);
+
+    processor.stop();
+
+    expect(parent.children).not.toContain(canvas);
+    expect(processor.canvas).toBeNull();
+    expect(processor.ctx).toBeNull();
   });
 });

@@ -96,6 +96,13 @@
       if (this.ctx && this.canvas) {
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
       }
+      if (this.canvas && this.canvas.parentElement) {
+        this.canvas.parentElement.removeChild(this.canvas);
+      }
+      this.canvas = null;
+      this.ctx = null;
+      this._offscreenCanvas = null;
+      this._rafId = null;
       if (this.logger) this.logger.info('Video processor stopped');
     }
 

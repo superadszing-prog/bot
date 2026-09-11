@@ -80,6 +80,17 @@ describe('frameExtractor.captureFrame', () => {
     expect(canvas.width).toBe(320);
     expect(canvas.height).toBe(180);
   });
+
+  test('returns null when canvas export throws (e.g. tainted cross-origin frame)', () => {
+    const canvas = createMockCanvas();
+    canvas.toDataURL = jest.fn(() => {
+      throw new Error('SecurityError');
+    });
+    global.document.createElement = jest.fn(() => canvas);
+    const video = createMockVideo();
+
+    expect(captureFrame(video, { maxWidth: 640 })).toBeNull();
+  });
 });
 
 describe('frameExtractor.extractFrames', () => {
@@ -198,5 +209,21 @@ describe('frameExtractor.extractFrames', () => {
 
     expect(frames).toHaveLength(3);
     expect(frames.map((f) => f.timestamp)).toEqual([0, 1, 2]);
+  });
+
+  test('restores playback state with finally when seek setup fails', async () => {
+    const video = createMockVideo({ duration: 2, paused: false, currentTime: 1.5 });
+    const originalTime = video.currentTime;
+    video.addEventListener = jest.fn(() => {
+      throw new Error('seek setup failed');
+    });
+    video.removeEventListener = jest.fn();
+    video.play = jest.fn().mockResolvedValue(undefined);
+
+    await expect(extractFrames(video, { start: 0, end: 1, intervalSeconds: 1 })).rejects.toThrow(
+      'seek setup failed'
+    );
+    expect(video.currentTime).toBe(originalTime);
+    expect(video.play).toHaveBeenCalled();
   });
 });
