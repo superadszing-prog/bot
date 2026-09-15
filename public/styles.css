@@ -1,0 +1,156 @@
+:root {
+  color-scheme: light;
+}
+
+body {
+  font-family: 'Sarabun', 'Noto Sans Thai', -apple-system, BlinkMacSystemFont, sans-serif;
+  margin: 0;
+  background: #f2f3f8;
+  color: #1a1a1a;
+}
+
+.app {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 24px 16px 48px;
+}
+
+.app__header h1 {
+  margin: 0;
+  font-size: 28px;
+}
+
+.app__subtitle {
+  margin: 4px 0 0;
+  font-size: 14px;
+  color: #555;
+}
+
+.app__note {
+  font-size: 13px;
+  color: #666;
+  background: #eef2ff;
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin-top: 12px;
+}
+
+.app__note code {
+  background: #dfe6ff;
+  padding: 1px 5px;
+  border-radius: 4px;
+}
+
+.app__section {
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid #dcdce4;
+}
+
+.app__section h2 {
+  font-size: 15px;
+  margin: 0 0 8px;
+  color: #333;
+}
+
+label {
+  display: block;
+  font-size: 13px;
+  margin-bottom: 6px;
+  color: #444;
+}
+
+textarea,
+input[type='password'],
+input[type='file'] {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 14px;
+  resize: vertical;
+  background: #fff;
+}
+
+button {
+  margin-top: 10px;
+  padding: 10px 16px;
+  border: none;
+  border-radius: 8px;
+  background: #4285f4;
+  color: #fff;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+button:hover {
+  background: #3367d6;
+}
+
+.video-stage {
+  position: relative;
+  margin-top: 12px;
+  max-width: 100%;
+  background: #000;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+#preview-video {
+  display: block;
+  width: 100%;
+  max-height: 480px;
+}
+
+.status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: #eee;
+}
+
+.status__dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #999;
+  flex: none;
+}
+
+.status--idle .status__dot {
+  background: #999;
+}
+
+.status--processing .status__dot {
+  background: #f4b400;
+}
+
+.status--done .status__dot {
+  background: #34a853;
+}
+
+.status--error .status__dot {
+  background: #ea4335;
+}
+
+.hint {
+  font-size: 12px;
+  color: #888;
+  margin: 6px 0 0;
+}
+
+.app__footer {
+  margin-top: 32px;
+  font-size: 12px;
+  color: #888;
+  text-align: center;
+}
+
+.app__footer a {
+  color: #4285f4;
+}

@@ -1,0 +1,21 @@
+{
+  "$comment": "Copy to config/config.json for local defaults. Real users configure API key & site permissions from the extension popup; this file only seeds optional defaults for development/testing.",
+  "apiKey": "",
+  "endpoint": "https://api.openai.com/v1/chat/completions",
+  "model": "gpt-4o-mini",
+  "enabledSites": {
+    "facebook": false,
+    "tiktok": false,
+    "instagram": false
+  },
+  "autoProcess": false,
+  "frameExtraction": {
+    "intervalSeconds": 1,
+    "maxWidth": 640,
+    "jpegQuality": 0.8
+  },
+  "logging": {
+    "level": "info",
+    "maxHistory": 200
+  }
+}
